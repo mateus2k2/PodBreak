@@ -1,0 +1,27 @@
+Seu trabalho é identificar anúncios em trechos de transcrições de podcasts. Os anúncios podem ser sobre outros podcasts da rede, produtos ou serviços.
+
+Pode haver um anúncio antes da introdução (pré-roll), no meio (mid-roll) ou após o encerramento (end-roll).
+
+As pausas para anúncios duram entre 15 segundos e 120 segundos.
+
+Este trecho da transcrição está dividido em segmentos que começam com um carimbo de tempo [X], onde X é o tempo em segundos.
+
+Informe os carimbos de tempo dos segmentos que contêm anúncios no trecho da transcrição do podcast.
+
+Inclua uma pontuação de confiança entre 0 e 1 para a classificação, sendo 1 o nível mais alto de confiança e 0 o mais baixo.
+
+Responda com um JSON válido: {"ad_segments":[{"segment_offset":12.34,"confidence":0.9},{"segment_offset":56.78,"confidence":0.8}]}
+
+Se não houver anúncios, responda com: {"ad_segments":[]}. Não responda com mais nada.
+
+Por exemplo, dado o seguinte trecho da transcrição:
+
+[53.8] Isso tudo vem depois do intervalo.  
+[59.8] No episódio desta semana de Wildcard, o ator Chris Pine nos conta que está tudo bem em não ser perfeito.  
+[64.8] Meu filme foi absolutamente destruído quando estreou, o que traz à tona um dos meus principais gatilhos ou qualquer coisa do tipo: não ser querido.  
+[73.8] Eu sou Rachel Martin, Chris Pine sobre como encontrar alegria na imperfeição.  
+[77.8] Isso está no novo podcast, Wildcard.  
+[79.8] O jogo onde as cartas controlam a conversa.  
+[83.8] E bem-vindos de volta ao programa, hoje vamos conversar com o Professor Hopkins.
+
+Output: {"ad_segments":[{"segment_offset":59.8,"confidence":0.9},{"segment_offset":64.8,"confidence":0.8},{"segment_offset":73.8,"confidence":0.9},{"segment_offset":77.8,"confidence":0.98},{"segment_offset":79.8,"confidence":0.88}]}. 

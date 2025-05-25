@@ -1,0 +1,51 @@
+# Required global setting
+llm_api_key: sk-proj-XXXXXXXXXXXXXXXXXXXXXXXX
+
+# Optional global setting (default gpt-4o)
+# llm_model: phi3:14b-medium-4k-instruct-q5_K_M
+llm_model: ollama/gemma3:4b
+provider: ollama
+ollama_api_base : http://localhost:11333
+
+# Optional openai settings
+openai_base_url: http://localhost:11333
+# openai_timeout: 300
+# openai_max_tokens: 4096
+
+# server: http://my.domain.com
+# server_port: 5001
+# threads: 5
+
+
+#setting a value here enables automatic scheduler to auto-refresh the feed lists and download new episodes
+#background_update_interval_minute: 10
+#job_timeout: 10800 #background jobs can get stuck on broken episodes, this will free up threads which exceed this time limit
+
+# if true then all new episodes will be whitelisted for download
+automatically_whitelist_new_episodes: true
+
+# limit the number episodes that podly will include from a new feed's archive
+# this is helpful because some podcast clients will poll the download endpoint
+# for every podcast (probably to get timestamp?) and this will cause podly to
+# download every podcast; so by setting this to a small number it caps the number
+# of podcasts podly will automatically whitelist in that scenario
+# if you want to download old episodes you can whitelist them from the UI
+# if automatically_whitelist_new_episodes overrides is false this setting is ignored
+number_of_episodes_to_whitelist_from_archive_of_new_feed: 1
+
+processing:
+  system_prompt_path: config/system_prompt.txt
+  user_prompt_template_path: config/user_prompt.jinja
+  num_segments_to_input_to_prompt: 30
+
+output:
+  fade_ms: 3000
+  min_ad_segement_separation_seconds: 60
+  min_ad_segment_length_seconds: 14
+  min_confidence: 0.8
+
+whisper:
+  whisper_type: local
+  model: base.en
+
+callback_url: http://localhost:5000

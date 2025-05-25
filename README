@@ -1,0 +1,17 @@
+jdbc:sqlite:file:\\wsl$\Ubuntu-22.04\home\mateus\WSL\PROJETOS\local-IA-stack\whisper\podly_pure_podcasts_fork\src\instance\sqlite3.db?nolock=1
+
+TODOs
+  - Fazer a trancrição assincrona
+	- os.environ["OLLAMA_API_BASE"] remover ?
+	- Ajustar logs LiteLLM
+	- Refactor da database. 
+		- Remover texto das Transcrições. 
+		- Aramazenar apenas Start Finish.
+
+flask --app ./src/main.py db init
+flask --app ./src/main.py db migrate -m "change"
+flask --app ./src/main.py db upgrade
+
+QUANDO CRIAR A BASE DE DADOS PELO DEV CONTAINER ELE CRIA COM ROOT TEM Q AJUSTAR A PERMISSÃO DO ARQUIVO PARA EDITAR NO DBEAVER
+sudo chown mateus:mateus /home/mateus/WSL/PROJETOS/whisper/src/instance/sqlite3.db
+chmod 664 /home/mateus/WSL/PROJETOS/whisper/src/instance/sqlite3.db

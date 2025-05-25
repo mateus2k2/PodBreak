@@ -1,0 +1,22 @@
+{
+	"name": "Whisper",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			"VARIANT": "20"
+		}
+	},
+	"runArgs": [
+		"--gpus", "all",
+		"--network=host"
+	],
+	"mounts": [
+	],
+	"forwardPorts": [
+		3000,
+		3333,
+		5001,
+		5010
+	],
+	"postCreateCommand": "sh .devcontainer/post-create.sh"
+}
