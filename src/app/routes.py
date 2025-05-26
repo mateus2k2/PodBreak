@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from flask import Blueprint, request, current_app, Flask
 from app.models import Post, Task, Identification, TranscriptSegment
@@ -41,6 +42,17 @@ def process():
     database_session = db.session   
     request_data = request.get_json()
     
+    # TODO: Check if the post is already processed in the database
+    existing_post = (
+        database_session.query(Post)
+        .filter(Post.title == post.title and Post.rss_feed_url == post.rss_feed_url)
+        .first()
+    )
+    if existing_post:
+        logging.info(f"Post '{post.title}' already processed.")
+        return []
+
+    # process the new post
     post = Post(
         guid=str(uuid.uuid4()),
         title=request_data["title"],

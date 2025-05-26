@@ -80,16 +80,6 @@ class PodcastProcessor:
         try:
             self.logger.info(f"Processing podcast: '{post.title}' started")
 
-            # Check if the post is already processed in the database
-            existing_post = (
-                self.db_session.query(Post)
-                .filter(Post.title == post.title and Post.rss_feed_url == post.rss_feed_url)
-                .first()
-            )
-            if existing_post:
-                self.logger.info(f"Post '{post.title}' already processed.")
-                # return []
-
             # Step 1: Transcribe audio
             transcript_segments = self.transcription_manager.transcribe(post)
 

@@ -71,7 +71,6 @@ class ModelCall(db.Model):  # type: ignore[name-defined, misc]
     status = db.Column(db.String, nullable=False, default="pending")
     error_message = db.Column(db.Text, nullable=True)
     retry_attempts = db.Column(db.Integer, nullable=False, default=0)
-    callback_url = db.Column(db.Text, nullable=True)  # URL for webhook callbacks
 
     identifications = db.relationship(
         "Identification", backref="model_call", lazy="dynamic"

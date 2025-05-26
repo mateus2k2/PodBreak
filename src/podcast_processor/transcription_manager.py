@@ -17,6 +17,7 @@ from .transcribe import (
     OpenAIWhisperTranscriber,
     Transcriber,
 )
+from sqlalchemy.orm import joinedload
 
 
 class TranscriptionManager:
@@ -58,14 +59,26 @@ class TranscriptionManager:
     ) -> Optional[List[TranscriptSegment]]:
         """Checks for existing successful transcription and returns segments if valid."""
         existing_whisper_call = (
-            self.model_call_query.filter_by(
-                post_id=post.id,
-                model_name=self.transcriber.model_name,
-                status="success",
+            ModelCall.query
+            .join(Post)
+            .filter(
+                Post.title == post.title,
+                Post.rss_feed_url == post.rss_feed_url,
+                ModelCall.status == "success",
+                ModelCall.model_name == post.model_name
             )
-            .order_by(ModelCall.timestamp.desc())
+            .options(joinedload(ModelCall.post))
             .first()
         )
+        # existing_whisper_call = (
+        #     self.model_call_query.filter_by(
+        #         post_id=post.id,
+        #         model_name=self.transcriber.model_name,
+        #         status="success",
+        #     )
+        #     .order_by(ModelCall.timestamp.desc())
+        #     .first()
+        # )
 
         if existing_whisper_call:
             self.logger.info(
