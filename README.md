@@ -14,17 +14,16 @@ AdSleuth transcribes podcast audio (local Whisper or remote OpenAI Whisper API),
 - Transcription: Whisper (local or remote)
 - Optional: Docker / Docker Dev Container
 
+## TODOs
+- Rename git repo 
+- https://github.com/mateus2k2/PodBreak
 
-jdbc:sqlite:file:\\wsl$\Ubuntu-22.04\home\mateus\WSL\PROJETOS\local-IA-stack\whisper\podly_pure_podcasts_fork\src\instance\sqlite3.db?nolock=1
+jdbc:sqlite:file:\\wsl$\Ubuntu\home\mateus\WSL\PROJETOS\audiobookshelf\audiobookshelf-ai\src\instance\sqlite3.db?nolock=1
+jdbc:sqlite:file:\\wsl$\Ubuntu\home\mateus\WSL\PROJETOS\audiobookshelf\audiobookshelf-web\config\absdatabase.sqlite?nolock=1
 
-TODOs
-	- TESTES
-    - Check if the post is already processed in the database na rota process
-	- os.environ["OLLAMA_API_BASE"] remover ?
-	- Ajustar logs LiteLLM
-	- Remover texto das Transcrições da DB. 
 
 python src/main.py
+python src/main.py > logs.ans 2>&1
 flask --app ./src/main.py db init
 flask --app ./src/main.py db migrate -m "change"
 flask --app ./src/main.py db upgrade

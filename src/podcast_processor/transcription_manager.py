@@ -64,8 +64,7 @@ class TranscriptionManager:
             .filter(
                 Post.title == post.title,
                 Post.rss_feed_url == post.rss_feed_url,
-                ModelCall.status == "success",
-                ModelCall.model_name == post.model_name
+                ModelCall.status == "success"
             )
             .options(joinedload(ModelCall.post))
             .first()

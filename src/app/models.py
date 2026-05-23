@@ -124,9 +124,12 @@ class Identification(db.Model):  # type: ignore[name-defined, misc]
 class Task(db.Model):  # type: ignore[name-defined, misc]
     __tablename__ = "task"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=True)
     status = db.Column(db.String, nullable=True)
     created_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
 
+    post = db.relationship("Post", backref=db.backref("tasks", lazy="dynamic"))
+
     def __repr__(self) -> str:
-        return f"<Task {self.id} Type:{self.task_type} Status:{self.status}>"
+        return f"<Task {self.id} Post:{self.post_id} Status:{self.status}>"

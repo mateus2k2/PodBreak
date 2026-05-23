@@ -6,20 +6,25 @@
 			"VARIANT": "20"
 		}
 	},
+	"remoteUser": "vscode",
 	"runArgs": [
 		"--name", "whisper_devcontainer",
 		"--gpus", "all",
 		"--network=host"
 	],
-	"mounts": [
-	],
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			}
+		}
+	},
+	"mounts": [],
 	"forwardPorts": [
 		3000,
 		3333,
 		5001,
 		5010
 	],
-	"postCreateCommand": "sh .devcontainer/post-create.sh"
+	"postCreateCommand": "bash .devcontainer/post-create.sh"
 }
-
-// https://code.visualstudio.com/docs/devcontainers/create-dev-container#_use-docker-compose

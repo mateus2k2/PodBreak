@@ -115,7 +115,7 @@ class LocalWhisperTranscriber(Transcriber):
             ) from e
 
         self.logger.info("Using local whisper: %s", audio_file_path)
-        model = whisper.load_model(self.whisper_model, self.device, compute_type=self.compute_type)
+        model = whisper.load_model(self.whisper_model, self.device, compute_type=self.compute_type, download_root="./models")
         self.logger.info("Beginning transcription")
         start = time.time()
         result = get_mock_result()  

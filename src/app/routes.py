@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Blueprint, request, current_app, Flask
 from app.models import Post, Task, Identification, TranscriptSegment
 from app import db
-from datetime import date
+from datetime import datetime
 from app.processor import get_processor
 import uuid
 from typing import cast
@@ -25,13 +25,14 @@ def process_post_async(post: Post, task: Task, app: Flask) -> None:
 
             get_processor().process(post_in_thread, task_in_thread, blocking=True)
 
-            # You can update task status here, for example:
             task_in_thread.status = "completed"
+            task_in_thread.updated_at = datetime.utcnow()
             thread_session.commit()
         except Exception as e:
             task_in_thread.status = "failed"
+            task_in_thread.updated_at = datetime.utcnow()
             thread_session.commit()
-            # Log error here if you want
+            logging.error(f"Processing failed: {e}")
         finally:
             thread_session.close()
 
@@ -39,31 +40,45 @@ def process_post_async(post: Post, task: Task, app: Flask) -> None:
 # route to register a post and process it
 @main_bp.route("/process", methods=["POST"])
 def process():
-    database_session = db.session   
+    database_session = db.session
     request_data = request.get_json()
-    
-    # TODO: Check if the post is already processed in the database
+
+    title = request_data["title"]
+    rss_feed_url = request_data["rss_feed_url"]
+
+    # Check if already processed
     existing_post = (
         database_session.query(Post)
-        .filter(Post.title == post.title and Post.rss_feed_url == post.rss_feed_url)
+        .filter(Post.title == title, Post.rss_feed_url == rss_feed_url)
         .first()
     )
     if existing_post:
-        logging.info(f"Post '{post.title}' already processed.")
-        return []
+        logging.info(f"Post '{title}' already processed, returning existing.")
+        existing_task = (
+            database_session.query(Task)
+            .filter(Task.post_id == existing_post.id)
+            .order_by(Task.id.desc())
+            .first()
+        )
+        return {
+            "post_id": existing_post.id,
+            "task_id": existing_task.id if existing_task else None,
+            "already_processed": True,
+        }
 
-    # process the new post
     post = Post(
         guid=str(uuid.uuid4()),
-        title=request_data["title"],
+        title=title,
         unprocessed_audio_path=request_data["file_path"],
-        description=request_data["description"],
         language=request_data["language"],
-        rss_feed_url=request_data["rss_feed_url"],
+        rss_feed_url=rss_feed_url,
     )
     database_session.add(post)
+    database_session.flush()  # get post.id before creating task
+
     task = Task(
         status="pending",
+        post_id=post.id,
     )
     database_session.add(task)
     database_session.commit()
@@ -74,6 +89,7 @@ def process():
     return {
         "post_id": post.id,
         "task_id": task.id,
+        "already_processed": False,
     }
 
 @main_bp.route("/identifications/<int:post_id>", methods=["GET"])
@@ -102,4 +118,18 @@ def identifications(post_id: str):
 
     return {
         "identifications": result
+    }
+
+
+@main_bp.route("/task/<int:task_id>", methods=["GET"])
+def get_task(task_id: int):
+    task = Task.query.get(task_id)
+    if not task:
+        return {"error": "Task not found"}, 404
+    return {
+        "task_id": task.id,
+        "post_id": task.post_id,
+        "status": task.status,
+        "created_at": task.created_at.isoformat() if task.created_at else None,
+        "updated_at": task.updated_at.isoformat() if task.updated_at else None,
     }

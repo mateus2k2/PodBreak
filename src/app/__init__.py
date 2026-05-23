@@ -3,6 +3,8 @@ import logging
 import os
 import sys
 
+os.environ["LITELLM_DEBUG"] = "False"
+
 from flask import Flask
 from flask_migrate import Migrate, upgrade
 from flask_sqlalchemy import SQLAlchemy
@@ -15,12 +17,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("podcast_processor")
 config = get_config("./config/config.yml")
 
-# Configure LiteLLM logger
-litellm_logger = logging.getLogger("litellm")
-litellm_logger.setLevel(logging.INFO)
-
-os.environ["LITELLM_DEBUG"] = "False"
-os.environ["OLLAMA_API_BASE"] = config.ollama_api_base
+for _noisy in ("litellm", "LiteLLM", "matplotlib", "torio", "urllib3",
+               "httpcore", "filelock", "fsspec", "lightning",
+               "lightning.pytorch", "pyannote"):
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
 
 def setup_dirs() -> None:
     if not os.path.exists("in"):

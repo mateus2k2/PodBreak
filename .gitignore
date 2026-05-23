@@ -1,2 +1,9 @@
-./data
 data
+models
+.claude
+.tests
+.venv
+src/instance
+config/config.yaml
+config/app.log
+logs.ans

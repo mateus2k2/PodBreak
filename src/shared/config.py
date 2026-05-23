@@ -58,7 +58,6 @@ class LocalWhisperConfig(BaseModel):
 class Config(BaseModel):
     llm_api_key: Optional[str] = Field(default=None)
     llm_model: str = Field(default="gpt-4o")
-    ollama_api_base: Optional[str] = None
     openai_base_url: Optional[str] = None
     openai_max_tokens: int = 4096
     openai_timeout: int = 300
@@ -70,7 +69,7 @@ class Config(BaseModel):
     )
     processing: ProcessingConfig
     server: Optional[str] = None
-    server_port: int = 5001
+    server_port: int = 5005
     background_update_interval_minute: Optional[int] = None
     job_timeout: int = 10800  # Default to 3 hours if not set
     threads: int = 1
@@ -118,7 +117,7 @@ class Config(BaseModel):
             ), "must supply api key to use remote whisper"
             self.whisper = RemoteWhisperConfig(
                 api_key=self.llm_api_key,
-                base_url=self.openai_base_url or "https://api.openai.com/v1",
+                base_url=self.openai_base_url
             )
         else:
             assert (
