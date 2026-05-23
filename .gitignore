@@ -4,6 +4,6 @@ models
 .tests
 .venv
 src/instance
-config/config.yaml
+config/config.yml
 config/app.log
 logs.ans

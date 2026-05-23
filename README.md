@@ -15,6 +15,9 @@ AdSleuth transcribes podcast audio (local Whisper or remote OpenAI Whisper API),
 - Optional: Docker / Docker Dev Container
 
 ## TODOs
+- Make better prompt
+- Test best small model
+- Dual language support
 - Rename git repo 
 - https://github.com/mateus2k2/PodBreak
 
