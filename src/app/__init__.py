@@ -58,6 +58,15 @@ def create_app() -> Flask:
     with app.app_context():
         upgrade()
 
+    if config.failed_cleanup_after_hours is not None:
+        from app.cleanup import start_cleanup_scheduler  # pylint: disable=import-outside-toplevel
+        start_cleanup_scheduler(
+            app=app,
+            db=db,
+            interval_hours=config.failed_cleanup_after_hours,
+            older_than_hours=config.failed_cleanup_after_hours,
+        )
+
     return app
 
 db = SQLAlchemy()

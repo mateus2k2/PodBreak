@@ -95,6 +95,7 @@ class Config(BaseModel):
     server: Optional[str] = None
     server_port: int = 5005
     threads: int = 1
+    failed_cleanup_after_hours: Optional[int] = None
     whisper: Optional[
         LocalWhisperConfig | RemoteWhisperConfig | TestWhisperConfig | GroqWhisperConfig
     ] = Field(
