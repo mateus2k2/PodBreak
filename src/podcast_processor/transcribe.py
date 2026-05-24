@@ -3,7 +3,7 @@ import shutil
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 
 from groq import Groq
 from openai import OpenAI
@@ -54,7 +54,7 @@ class Transcriber(ABC):
         pass
 
     @abstractmethod
-    def transcribe(self, audio_file_path: str) -> List[Segment]:
+    def transcribe(self, audio_file_path: str, language: Optional[str] = None) -> List[Segment]:
         pass
 
 
@@ -75,12 +75,13 @@ class LocalTranscriptSegment(BaseModel):
 
 
 class LocalWhisperTranscriber(Transcriber):
-    def __init__(self, logger: logging.Logger, whisper_model: str, batch_size: int, compute_type: str, device: str):
+    def __init__(self, logger: logging.Logger, whisper_model: str, batch_size: int, compute_type: str, device: str, model_path: str = "./models"):
         self.logger = logger
         self.whisper_model = whisper_model
         self.batch_size = batch_size
         self.compute_type = compute_type
         self.device = device
+        self.model_path = model_path
 
     @property
     def model_name(self) -> str:
@@ -115,7 +116,7 @@ class LocalWhisperTranscriber(Transcriber):
             ) from e
 
         self.logger.info("Using local whisper: %s", audio_file_path)
-        model = whisper.load_model(self.whisper_model, self.device, compute_type=self.compute_type, download_root="./models")
+        model = whisper.load_model(self.whisper_model, self.device, compute_type=self.compute_type, download_root=self.model_path)
         self.logger.info("Beginning transcription")
         start = time.time()
         result = get_mock_result()  
@@ -147,7 +148,7 @@ class OpenAIWhisperTranscriber(Transcriber):
     def model_name(self) -> str:
         return self.config.model  # e.g. "whisper-1"
 
-    def transcribe(self, audio_file_path: str) -> List[Segment]:
+    def transcribe(self, audio_file_path: str, language: Optional[str] = None) -> List[Segment]:
         self.logger.info("Using remote whisper")
         audio_chunk_path = audio_file_path + "_parts"
 
@@ -204,7 +205,13 @@ class OpenAIWhisperTranscriber(Transcriber):
             self.logger.debug("Got transcription")
 
             segments = transcription.segments
-            assert segments is not None
+            if segments is None:
+                self.logger.error(
+                    f"Transcription response has no segments. "
+                    f"The remote whisper endpoint may not support timestamp_granularities. "
+                    f"Raw response: {transcription}"
+                )
+                raise ValueError("Remote whisper returned no segments — endpoint may not support verbose_json with timestamp_granularities")
 
             self.logger.debug(f"Got {len(segments)} segments")
 
@@ -231,7 +238,7 @@ class GroqWhisperTranscriber(Transcriber):
     def model_name(self) -> str:
         return f"groq_{self.config.model}"
 
-    def transcribe(self, audio_file_path: str) -> List[Segment]:
+    def transcribe(self, audio_file_path: str, language: Optional[str] = None) -> List[Segment]:
         self.logger.info("Using Groq whisper")
         audio_chunk_path = audio_file_path + "_parts"
 

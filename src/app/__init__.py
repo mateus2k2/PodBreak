@@ -23,10 +23,9 @@ for _noisy in ("litellm", "LiteLLM", "matplotlib", "torio", "urllib3",
     logging.getLogger(_noisy).setLevel(logging.WARNING)
 
 def setup_dirs() -> None:
-    if not os.path.exists("in"):
-        os.makedirs("in")
-    if not os.path.exists("srv"):
-        os.makedirs("srv")
+    for d in ("in", "srv", "data/instance"):
+        if not os.path.exists(d):
+            os.makedirs(d)
 
 
 class SchedulerConfig:
@@ -34,7 +33,7 @@ class SchedulerConfig:
     SCHEDULER_JOBSTORES = {
         "default": {
             "type": "sqlalchemy",
-            "url": "sqlite:///src/instance/jobs.sqlite",
+            "url": "sqlite:///data/db/jobs.sqlite",
         }
     }
     SCHEDULER_EXECUTORS = {"default": {"type": "threadpool", "max_workers": 1}}
@@ -43,7 +42,7 @@ class SchedulerConfig:
 def create_app() -> Flask:
     app = Flask(__name__, static_folder="static")
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///sqlite3.db?timeout=90"
+    app.config["SQLALCHEMY_DATABASE_URI"] = config.database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     groq_logger = logging.getLogger("groq")
@@ -65,5 +64,4 @@ db = SQLAlchemy()
 # scheduler = APScheduler()
 migrate = Migrate(directory="./src/migrations")
 
-# setup_dirs()
 print("Config:\n", json.dumps(config.redacted().model_dump(), indent=2))

@@ -7,10 +7,32 @@ import yaml
 from pydantic import BaseModel, Field, model_validator
 
 
+class LanguagePromptConfig(BaseModel):
+    system_prompt_path: Optional[str] = None
+    user_prompt_template_path: Optional[str] = None
+
+
 class ProcessingConfig(BaseModel):
     system_prompt_path: str
     user_prompt_template_path: str
     num_segments_to_input_to_prompt: int
+    language_prompts: Optional[Dict[str, LanguagePromptConfig]] = None
+
+    def resolve_system_prompt_path(self, language: Optional[str]) -> str:
+        if language and self.language_prompts:
+            lang_code = language.split("-")[0].lower()
+            lang_cfg = self.language_prompts.get(lang_code)
+            if lang_cfg and lang_cfg.system_prompt_path:
+                return lang_cfg.system_prompt_path
+        return self.system_prompt_path
+
+    def resolve_user_prompt_template_path(self, language: Optional[str]) -> str:
+        if language and self.language_prompts:
+            lang_code = language.split("-")[0].lower()
+            lang_cfg = self.language_prompts.get(lang_code)
+            if lang_cfg and lang_cfg.user_prompt_template_path:
+                return lang_cfg.user_prompt_template_path
+        return self.user_prompt_template_path
 
 
 class OutputConfig(BaseModel):
@@ -53,11 +75,13 @@ class LocalWhisperConfig(BaseModel):
     batch_size: int = 8
     compute_type: Literal["float16", "int8"] = "float16"
     device: Literal["cpu", "cuda"] = "cuda"
+    model_path: str = "./models"
 
 
 class Config(BaseModel):
     llm_api_key: Optional[str] = Field(default=None)
-    llm_model: str = Field(default="gpt-4o")
+    openai_model: str = Field(default="gpt-4o")
+    database_url: str = "sqlite:///data/db/sqlite3.db?timeout=90"
     openai_base_url: Optional[str] = None
     openai_max_tokens: int = 4096
     openai_timeout: int = 300
@@ -70,8 +94,6 @@ class Config(BaseModel):
     processing: ProcessingConfig
     server: Optional[str] = None
     server_port: int = 5005
-    background_update_interval_minute: Optional[int] = None
-    job_timeout: int = 10800  # Default to 3 hours if not set
     threads: int = 1
     whisper: Optional[
         LocalWhisperConfig | RemoteWhisperConfig | TestWhisperConfig | GroqWhisperConfig
@@ -89,9 +111,6 @@ class Config(BaseModel):
         deprecated=True,
         description="deprecated in favor of [Remote|Local]WhisperConfig",
     )
-    automatically_whitelist_new_episodes: bool = True
-    number_of_episodes_to_whitelist_from_archive_of_new_feed: int = 1
-    callback_url: Optional[str] = None
 
     def redacted(self) -> Config:
         return self.model_copy(
@@ -150,7 +169,7 @@ def get_config_from_str(config_str: str) -> Config:
     # translate old open ai values to agnostic values for backwards compatibility
     if "llm_api_key" not in config_dict and "openai_api_key" in config_dict:
         config_dict["llm_api_key"] = config_dict["openai_api_key"]
-    if "llm_model" not in config_dict and "openai_model" in config_dict:
-        config_dict["llm_model"] = config_dict["openai_model"]
+    if "openai_model" not in config_dict and "openai_model" in config_dict:
+        config_dict["openai_model"] = config_dict["openai_model"]
 
     return Config(**config_dict)

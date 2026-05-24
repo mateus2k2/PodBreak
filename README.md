@@ -15,15 +15,22 @@ AdSleuth transcribes podcast audio (local Whisper or remote OpenAI Whisper API),
 - Optional: Docker / Docker Dev Container
 
 ## TODOs
+- Rename git repo
 - Make better prompt
 - Test best small model
-- Dual language support
-- Rename git repo 
+- Server side ads = Download via VPN to keep server side ads in english 
+- Schedule cleanup = Delete failed tasks and model_calls, posts, transcript and identification related to that failed post after 24h
+
+## REFERENCE
 - https://github.com/mateus2k2/PodBreak
+- https://github.com/souzatharsis/podcastfy
+- https://github.com/podly-pure-podcasts/podly_pure_podcasts
+- https://docs.openwebui.com/troubleshooting/audio/
+
+## USEFUL INFO
 
 jdbc:sqlite:file:\\wsl$\Ubuntu\home\mateus\WSL\PROJETOS\audiobookshelf\audiobookshelf-ai\src\instance\sqlite3.db?nolock=1
 jdbc:sqlite:file:\\wsl$\Ubuntu\home\mateus\WSL\PROJETOS\audiobookshelf\audiobookshelf-web\config\absdatabase.sqlite?nolock=1
-
 
 python src/main.py
 python src/main.py > logs.ans 2>&1
@@ -34,3 +41,4 @@ flask --app ./src/main.py db upgrade
 QUANDO CRIAR A BASE DE DADOS PELO DEV CONTAINER ELE CRIA COM ROOT TEM Q AJUSTAR A PERMISSÃO DO ARQUIVO PARA EDITAR NO DBEAVER
 sudo chown mateus:mateus /home/mateus/WSL/PROJETOS/whisper/src/instance/sqlite3.db
 chmod 664 /home/mateus/WSL/PROJETOS/whisper/src/instance/sqlite3.db
+

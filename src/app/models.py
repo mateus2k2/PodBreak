@@ -11,7 +11,6 @@ class Post(db.Model):  # type: ignore[name-defined, misc]
     unprocessed_audio_path = db.Column(db.Text)
     description = db.Column(db.Text)
     language = db.Column(db.Text)
-    rss_feed_url = db.Column(db.Text, nullable=False)
 
     segments = db.relationship(
         "TranscriptSegment",

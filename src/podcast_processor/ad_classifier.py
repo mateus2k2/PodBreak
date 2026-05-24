@@ -167,7 +167,7 @@ class AdClassifier:
         user_prompt_str: str,
     ) -> Optional[ModelCall]:
         """Get an existing ModelCall or create a new one."""
-        model = self.config.llm_model
+        model = self.config.openai_model
         model_call: Optional[ModelCall] = (
             self.model_call_query.filter_by(
                 post_id=post.id,
@@ -261,9 +261,10 @@ class AdClassifier:
             self.db_session.commit()
         except (ValidationError, AssertionError) as e:
             self.logger.error(
-                f"Error processing LLM response for ModelCall {model_call.id}: {e}",
+                f"Error processing LLM response for ModelCall {model_call.id}",
                 exc_info=True,
             )
+            raise
 
     def _create_identifications(
         self,
@@ -339,7 +340,7 @@ class AdClassifier:
 
     def _is_retryable_error(self, error: Exception) -> bool:
         """Determine if an error should be retried."""
-        if isinstance(error, InternalServerError):
+        if isinstance(error, (InternalServerError, ValidationError, AssertionError)):
             return True
 
         # Check for 503 errors in other exception types
@@ -374,8 +375,8 @@ class AdClassifier:
                 response = litellm.completion(
                     model=model_call_obj.model_name,
                     messages=[
-                        {"role": "system", "content": system_prompt},
                         {"role": "user", "content": model_call_obj.prompt},
+                        {"role": "system", "content": system_prompt},
                     ],
                     max_tokens=self.config.openai_max_tokens,
                     timeout=self.config.openai_timeout,
@@ -386,6 +387,8 @@ class AdClassifier:
                 content = response_first_choice.message.content
                 assert content is not None
                 raw_response_content = content
+
+                clean_and_parse_model_output(raw_response_content)
 
                 model_call_obj.response = raw_response_content
                 model_call_obj.status = "success"

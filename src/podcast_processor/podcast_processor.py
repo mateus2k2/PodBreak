@@ -1,5 +1,4 @@
 import logging
-import os
 import threading
 from typing import Any, Dict, Optional
 
@@ -78,17 +77,17 @@ class PodcastProcessor:
             raise ProcessorException("Processing job in progress")
 
         try:
-            self.logger.info(f"Processing podcast: '{post.title}' started")
+            self.logger.info(f"Processing podcast: '{post.title}' - {post.guid} started")
 
             # Step 1: Transcribe audio
             transcript_segments = self.transcription_manager.transcribe(post)
 
             # Step 2: Classify ad segments
             user_prompt_template = self.get_user_prompt_template(
-                self.config.processing.user_prompt_template_path
+                self.config.processing.resolve_user_prompt_template_path(post.language)
             )
             system_prompt = self.get_system_prompt(
-                self.config.processing.system_prompt_path
+                self.config.processing.resolve_system_prompt_path(post.language)
             )
             self.ad_classifier.classify(
                 transcript_segments=transcript_segments,
@@ -97,62 +96,14 @@ class PodcastProcessor:
                 post=post,
             )
 
-            # Step 3: Set task status to "completed" and callback URL
-            self.callback(post, task)
 
             self.logger.info(f"Processing podcast: {post} complete")
             return []
         finally:
             PodcastProcessor.locks[unprocessed_audio_path].release()
 
-    def callback(self, post: Post, task: Task) -> None:
-        """
-        Callback function to be called after processing is complete.
-        This can be used to update the database or notify other services.
 
-        Args:
-            post: The Post object containing the podcast to process
-            task: The Task object containing the processing task
-        """
-        # Update the database or notify other services as needed
-        task.status = "completed"
-        self.db_session.commit()
-
-        # for the given post, get all the transcript_segments that is present in the  identification where its transcript_segment_id has the same post_id from the current post
-        identifications = TranscriptSegment.query.join(Identification).filter(TranscriptSegment.post_id == post.id).all()
-        result = []
-        for segment in identifications:
-            segment_dict = {
-                "id": segment.id,
-                "post_id": segment.post_id,
-                "sequence_num": segment.sequence_num,
-                "start_time": segment.start_time,
-                "end_time": segment.end_time,
-                "text": segment.text,
-                "identifications": [
-                    {
-                        "id": ident.id,
-                        "model_call_id": ident.model_call_id,
-                        "label": ident.label,
-                        "confidence": ident.confidence,
-                    }
-                    for ident in segment.identifications
-                ],
-            }
-            result.append(segment_dict)
-
-        # make request fot config.callback_url
-        self.logger.info(f"Callback for post {post.id} and task {task.id} completed.")
-        try:
-            response = requests.post(self.config.callback_url, json={"segments": result})
-            response.raise_for_status()  # <- This can raise HTTPError
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"Callback failed")
-            # raise ProcessorException(f"Callback failed")
-
-    
     def get_system_prompt(self, system_prompt_path: str) -> str:
-        """Load the system prompt from a file."""
         with open(system_prompt_path, "r") as f:
             return f.read()
 

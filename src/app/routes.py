@@ -44,34 +44,58 @@ def process():
     request_data = request.get_json()
 
     title = request_data["title"]
-    rss_feed_url = request_data["rss_feed_url"]
+    guid = request_data["guid"]
+    description = request_data.get("description", "")
 
     # Check if already processed
     existing_post = (
         database_session.query(Post)
-        .filter(Post.title == title, Post.rss_feed_url == rss_feed_url)
+        .filter(Post.guid == guid)
         .first()
     )
     if existing_post:
-        logging.info(f"Post '{title}' already processed, returning existing.")
         existing_task = (
             database_session.query(Task)
             .filter(Task.post_id == existing_post.id)
             .order_by(Task.id.desc())
             .first()
         )
+
+        task_status = existing_task.status if existing_task else None
+
+        if task_status in ("completed", "pending"):
+            logging.info(f"Post '{title}' - {guid} has task with status '{task_status}', skipping.")
+            return {
+                "post_id": existing_post.id,
+                "task_id": existing_task.id,
+                "already_processed": True,
+                "task_status": task_status,
+            }
+
+        logging.info(f"Post '{title}' - {guid} has task with status '{task_status}', retrying.")
+        task = Task(
+            status="pending",
+            post_id=existing_post.id,
+        )
+        database_session.add(task)
+        database_session.commit()
+
+        app = cast(Flask, current_app._get_current_object())
+        executor.submit(process_post_async, existing_post, task, app)
+
         return {
             "post_id": existing_post.id,
-            "task_id": existing_task.id if existing_task else None,
-            "already_processed": True,
+            "task_id": task.id,
+            "already_processed": False,
+            "task_status": "pending",
         }
 
     post = Post(
-        guid=str(uuid.uuid4()),
+        guid=guid,
         title=title,
+        description=description,
         unprocessed_audio_path=request_data["file_path"],
         language=request_data["language"],
-        rss_feed_url=rss_feed_url,
     )
     database_session.add(post)
     database_session.flush()  # get post.id before creating task

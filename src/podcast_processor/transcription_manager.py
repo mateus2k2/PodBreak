@@ -49,7 +49,7 @@ class TranscriptionManager:
         if isinstance(self.config.whisper, RemoteWhisperConfig):
             return OpenAIWhisperTranscriber(self.logger, self.config.whisper)
         if isinstance(self.config.whisper, LocalWhisperConfig):
-            return LocalWhisperTranscriber(self.logger, self.config.whisper.model, self.config.whisper.batch_size, self.config.whisper.compute_type, self.config.whisper.device)
+            return LocalWhisperTranscriber(self.logger, self.config.whisper.model, self.config.whisper.batch_size, self.config.whisper.compute_type, self.config.whisper.device, self.config.whisper.model_path)
         if isinstance(self.config.whisper, GroqWhisperConfig):
             return GroqWhisperTranscriber(self.logger, self.config.whisper)
         raise ValueError(f"unhandled whisper config {self.config.whisper}")
@@ -62,8 +62,7 @@ class TranscriptionManager:
             ModelCall.query
             .join(Post)
             .filter(
-                Post.title == post.title,
-                Post.rss_feed_url == post.rss_feed_url,
+                Post.guid == post.guid,
                 ModelCall.status == "success"
             )
             .options(joinedload(ModelCall.post))

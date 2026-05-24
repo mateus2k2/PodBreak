@@ -2,33 +2,17 @@
 llm_api_key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVjMTIxZDNlLTgyODAtNDE0MC04MTdlLTgxNDM3NGYyYjQ5OSIsImV4cCI6MTc4MTk4NTQ5MSwianRpIjoiMTg5NjMyZTItNWE0Ni00NThiLTgyYjYtMjllOWJlYWU5NTBlIn0.dN-97m_cYcVFsrwG2tobqHYKR5V-Xca2E2q9trMHzvM
 
 # Optional global setting (default gpt-4o)
-# llm_model: phi3:14b-medium-4k-instruct-q5_K_M
-llm_model: ollama/gemma3:4b
+# openai_model: phi3:14b-medium-4k-instruct-q5_K_M
+openai_model: ollama/llama3.1:8b
 provider: ollama
 openai_base_url: https://ollama.mateusfms.com
 # openai_timeout: 300
 # openai_max_tokens: 4096
 
 # server: http://my.domain.com
-# server_port: 5001
+server_port: 5005
 # threads: 5
 
-
-#setting a value here enables automatic scheduler to auto-refresh the feed lists and download new episodes
-#background_update_interval_minute: 10
-#job_timeout: 10800 #background jobs can get stuck on broken episodes, this will free up threads which exceed this time limit
-
-# if true then all new episodes will be whitelisted for download
-automatically_whitelist_new_episodes: true
-
-# limit the number episodes that podly will include from a new feed's archive
-# this is helpful because some podcast clients will poll the download endpoint
-# for every podcast (probably to get timestamp?) and this will cause podly to
-# download every podcast; so by setting this to a small number it caps the number
-# of podcasts podly will automatically whitelist in that scenario
-# if you want to download old episodes you can whitelist them from the UI
-# if automatically_whitelist_new_episodes overrides is false this setting is ignored
-number_of_episodes_to_whitelist_from_archive_of_new_feed: 1
 
 processing:
   system_prompt_path: config/system_prompt.txt
@@ -44,5 +28,3 @@ output:
 whisper:
   whisper_type: local
   model: base.en
-
-callback_url: http://localhost:5000
